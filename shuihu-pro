@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水浒传闯关大冒险</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Songti SC","SimSun","FangSong",serif;min-height:100vh;background:linear-gradient(160deg,#0d1f35 0%,#1a3a5c 50%,#0d1f35 100%);display:flex;flex-direction:column;align-items:center;padding:16px 14px 60px;}
+.main-title{font-size:clamp(1.5rem,6vw,2.6rem);color:#d4a017;text-align:center;text-shadow:2px 2px 0 #8b1a1a,0 0 24px rgba(212,160,23,.5);letter-spacing:4px;margin-bottom:2px;}
+.main-sub{color:#f5e6c8;text-align:center;font-size:.95rem;margin-bottom:14px;opacity:.85;}
+#hud{width:100%;max-width:660px;display:none;align-items:center;gap:10px;background:rgba(0,0,0,.45);border:2px solid #d4a017;border-radius:40px;padding:8px 18px;margin-bottom:12px;}
+#hud-score{color:#d4a017;font-size:1rem;white-space:nowrap;min-width:80px;}
+.hud-track{flex:1;height:10px;background:rgba(255,255,255,.12);border-radius:10px;overflow:hidden;}
+#hud-fill{height:100%;background:linear-gradient(90deg,#d4a017,#c0392b);border-radius:10px;transition:width .5s;}
+#hud-qc{color:#f5e6c8;font-size:.85rem;white-space:nowrap;}
+#hud-combo{color:#f8c060;font-size:.85rem;font-weight:bold;white-space:nowrap;min-width:60px;text-align:right;}
+#title-badge{display:none;background:linear-gradient(135deg,#8b1a1a,#c0392b);border:2px solid #d4a017;border-radius:30px;padding:5px 18px;color:#ffd700;font-size:.9rem;letter-spacing:2px;margin-bottom:10px;text-align:center;animation:badgePop .4s ease;}
+@keyframes badgePop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.card{width:100%;max-width:660px;background:linear-gradient(145deg,#f5e6c8,#e8d5a3);border:3px solid #d4a017;border-radius:18px;padding:24px 22px;box-shadow:0 8px 40px rgba(0,0,0,.55);position:relative;}
+.card::before{content:"";position:absolute;inset:8px;border:1px solid rgba(212,160,23,.25);border-radius:12px;pointer-events:none;}
+#ss{text-align:center;}
+#ss h2{font-size:1.5rem;color:#8b1a1a;margin-bottom:10px;}
+#ss p{font-size:.95rem;line-height:1.8;color:#333;margin-bottom:10px;}
+.big{font-size:3.8rem;display:block;margin:0 auto 10px;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0;}
+.chip{background:rgba(192,57,43,.1);border:1px solid #c0392b;border-radius:20px;padding:4px 12px;font-size:.85rem;color:#8b1a1a;}
+.chapter-list{display:flex;flex-direction:column;gap:8px;margin:14px 0;text-align:left;}
+.ch-item{background:rgba(255,255,255,.6);border:1px solid #c8a87a;border-radius:10px;padding:10px 14px;font-size:.88rem;color:#333;line-height:1.6;}
+.ch-item strong{color:#8b1a1a;}
+.btn-red{display:inline-block;width:100%;margin-top:14px;padding:13px 0;background:linear-gradient(135deg,#c0392b,#8b1a1a);border:none;border-radius:30px;font-family:inherit;font-size:1.15rem;color:#d4a017;cursor:pointer;letter-spacing:2px;box-shadow:0 4px 18px rgba(192,57,43,.4);transition:transform .2s;}
+.btn-red:hover{transform:translateY(-2px);}
+.btn-gold{display:block;width:100%;margin-top:12px;padding:12px 0;background:linear-gradient(135deg,#d4a017,#b8860b);border:none;border-radius:12px;font-family:inherit;font-size:1.05rem;color:white;cursor:pointer;letter-spacing:2px;transition:transform .2s;}
+.btn-gold:hover{transform:translateY(-2px);}
+#qs{padding-top:50px;}
+.badge{position:absolute;top:-14px;left:20px;background:#c0392b;color:white;padding:3px 14px;border-radius:10px;font-size:.78rem;letter-spacing:1px;}
+.htag{display:inline-flex;align-items:center;gap:6px;background:#c0392b;color:white;padding:4px 14px;border-radius:20px;font-size:.88rem;margin-bottom:12px;}
+.qt{font-size:clamp(.98rem,2.6vw,1.12rem);line-height:1.9;color:#1a0a00;margin-bottom:16px;min-height:52px;}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ob{background:white;border:2px solid #d4a017;border-radius:10px;padding:12px 8px;font-family:inherit;font-size:.92rem;color:#1a0a00;cursor:pointer;transition:background .18s,transform .15s;line-height:1.4;text-align:center;}
+.ob:hover{background:#fff3c4;transform:translateY(-2px);}
+.ob.cor{background:#2d6a4f!important;border-color:#2d6a4f!important;color:white!important;}
+.ob.wrg{background:#c0392b!important;border-color:#c0392b!important;color:white!important;}
+.fb{margin-top:12px;padding:11px 13px;border-radius:10px;font-size:.9rem;line-height:1.7;display:none;}
+.fb.show{display:block;}
+.fb.ok{background:rgba(45,106,79,.12);border:1px solid #2d6a4f;color:#1a4a2e;}
+.fb.bad{background:rgba(192,57,43,.1);border:1px solid #c0392b;color:#7a1a0e;}
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;}
+#overlay.show{display:flex;}
+#pop{background:linear-gradient(145deg,#f5e6c8,#e8d5a3);border:3px solid #d4a017;border-radius:20px;padding:30px 28px;max-width:360px;width:90%;text-align:center;animation:popIn .45s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+#pop .pop-icon{font-size:3.5rem;display:block;margin-bottom:10px;}
+#pop h3{font-size:1.4rem;color:#8b1a1a;margin-bottom:6px;}
+#pop .pop-reward{background:linear-gradient(135deg,#8b1a1a,#c0392b);color:#ffd700;border-radius:12px;padding:12px 16px;margin:12px 0;font-size:1rem;line-height:1.8;}
+#pop .pop-title-label{font-size:.85rem;color:#666;margin-bottom:4px;}
+#pop .pop-title-val{font-size:1.3rem;color:#8b1a1a;font-weight:bold;}
+#pop p{font-size:.9rem;color:#555;line-height:1.7;margin-bottom:14px;}
+#es{text-align:center;}
+#es h2{font-size:1.45rem;color:#8b1a1a;margin-bottom:10px;}
+.sbox{background:rgba(212,160,23,.1);border:2px solid #d4a017;border-radius:14px;padding:16px;margin:12px 0;}
+.snum{font-size:2.6rem;color:#c0392b;font-weight:bold;}
+.rnk{font-size:1.05rem;color:#2d6a4f;margin-top:4px;}
+#emsg{font-size:.92rem;line-height:1.8;color:#333;margin:10px 0;}
+.medals{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0;}
+.medal{background:rgba(212,160,23,.15);border:1px solid #d4a017;border-radius:20px;padding:5px 14px;font-size:.85rem;color:#8b1a1a;}
+#wr{text-align:left;margin-top:12px;}
+.wi{background:rgba(192,57,43,.07);border-radius:8px;padding:9px 11px;margin-bottom:6px;font-size:.85rem;line-height:1.6;color:#333;}
+#combo-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#8b1a1a,#c0392b);color:#ffd700;font-size:1.6rem;font-weight:bold;padding:14px 32px;border-radius:50px;border:3px solid #d4a017;pointer-events:none;opacity:0;z-index:200;text-align:center;transition:opacity .2s;}
+#combo-toast.show{opacity:1;}
+@media(max-width:480px){.opts{grid-template-columns:1fr;}.card{padding:20px 14px;}}
+</style>
+</head>
+<body>
+<p class="main-title">⚔️ 水浒传 ⚔️</p>
+<p class="main-sub">梁山闯关大冒险 · 五年级必读挑战</p>
+<div id="title-badge">🕐 初入江湖</div>
+<div id="hud">
+  <span id="hud-score">⭐ 0分</span>
+  <div class="hud-track"><div id="hud-fill" style="width:0%"></div></div>
+  <span id="hud-qc">1/25</span>
+  <span id="hud-combo"></span>
+</div>
+<div class="card" id="ss">
+  <span class="big">🏯</span>
+  <h2>梁山好汉召唤令！</h2>
+  <p>《水浒传》共108位好汉，替天行道，义薄云天。闯过5关，赢取最高头衔！</p>
+  <div class="chips">
+    <span class="chip">🐯 武松打虎</span><span class="chip">⚡ 鲁智深</span>
+    <span class="chip">🌊 宋江</span><span class="chip">🪓 李逵</span>
+    <span class="chip">🏰 梁山泊</span><span class="chip">🨀 吴用</span>
+    <span class="chip">🩹 花荣</span><span class="chip">🔨 林冲</span>
+  </div>
+  <div class="chapter-list">
+    <div class="ch-item"><strong>第一关 · 英雄绰号</strong> — 5题，每题10分，全对额外奖励50分！</div>
+    <div class="ch-item"><strong>第二关 · 经典情节</strong> — 5题，分值<strong style="color:#c0392b">×2倍</strong>，过关再奖60分！</div>
+    <div class="ch-item"><strong>第三关 · 人物关系</strong> — 5题，分值<strong style="color:#c0392b">×2倍</strong>，3连击触发奖励！</div>
+    <div class="ch-item"><strong>第四关 · 梁山秘闻</strong> — 5题，分值<strong style="color:#c0392b">×3倍</strong>，解锁军师称号！</div>
+    <div class="ch-item"><strong>第五关 · 终极考验</strong> — 5题，每题<strong style="color:#c0392b">20×4倍</strong>，冲击最高头衔！</div>
+  </div>
+  <p style="color:#8b1a1a;font-weight:bold">🔥 连续答对触发连击加成，得分大幅提升！</p>
+  <button class="btn-red" onclick="startGame()">开始闯关 🚀</button>
+</div>
+<div class="card" id="qs" style="display:none">
+  <div class="badge" id="bg">第一关</div>
+  <div class="htag"><span id="he"></span>&nbsp;<span id="hn"></span></div>
+  <div class="qt" id="qt"></div>
+  <div class="opts" id="opts"></div>
+  <div class="fb" id="fb"></div>
+  <button class="btn-gold" id="nb" style="display:none" onclick="nextQ()">下一题 →</button>
+</div>
+<div class="card" id="es" style="display:none">
+  <span class="big" id="ei">🏆</span>
+  <h2 id="et">闯关完成！</h2>
+  <div class="sbox"><div class="snum" id="fs">0分</div><div class="rnk" id="rn">初出茅庐</div></div>
+  <div class="medals" id="medals"></div>
+  <p id="emsg"></p>
+  <div id="wr"></div>
+  <button class="btn-red" onclick="startGame()">再战一局 🔄</button>
+</div>
+<div id="overlay">
+  <div id="pop">
+    <span class="pop-icon" id="pop-icon">🎉</span>
+    <h3 id="pop-ch-title">第一关通过！</h3>
+    <div class="pop-reward" id="pop-reward">奖励</div>
+    <div class="pop-title-label">新头衔解锁</div>
+    <div class="pop-title-val" id="pop-title-val">江湖游侠</div>
+    <p id="pop-msg">继续加油！</p>
+    <button class="btn-red" onclick="closePopAndContinue()">继续闯关 ⚔️</button>
+  </div>
+</div>
+<div id="combo-toast">🔥 连击！</div>
+<script>
+var CHAPTERS = [
+  { name: '第一关·英雄绰号', mult: 1, bonus: 50, qs: [
+    { he:'🐯', hn:'武松', q:'武松在景阳冈赤手空拳打死老虎，威震天下。他的绰号是什么？', opts:['行者','豹子头','花和尚','黑旋风'], ans:0, exp:'武松绰号【行者】，因他常穿行者打扮。景阳冈打虎是《水浒传》最经典情节之一！' },
+    { he:'🔨', hn:'林冲', q:'林冲原是东京八十万禁军教头，因奸人陷害被发配沧州。他的绰号是什么？', opts:['玉麒麟','豹子头','及时雨','智多星'], ans:1, exp:'林冲绰号【豹子头】，形容他威猛如豹。被高俅陷害，雪夜上梁山，令人动容！' },
+    { he:'⚡', hn:'鲁智深', q:'鲁智深力大无比，能拔起庙前垂杨柳，身上刺满花绣。他的绰号是什么？', opts:['花和尚','混江龙','神行太保','霹雳火'], ans:0, exp:'鲁智深绰号【花和尚】，因身上刺满花绣。三拳打死镇关西，侠肝义胆！' },
+    { he:'🌊', hn:'宋江', q:'宋江仗义疏财、广结好汉，是梁山泊首领。他最著名的绰号是什么？', opts:['及时雨','小李广','双鞭将','赛貂蝉'], ans:0, exp:'宋江绰号【及时雨】，常在别人最需要时出手，如同久旱后的甘霖！' },
+    { he:'🨀', hn:'吴用', q:'吴用足智多谋，是梁山的军师，常被称为赛诸葛。他的绰号是什么？', opts:['及时雨','智多星','入云龙','神机军师'], ans:1, exp:'吴用绰号【智多星】，是梁山核心智囊，智取生辰纲就是他策划的！' }
+  ]},
+  { name: '第二关·经典情节', mult: 2, bonus: 60, qs: [
+    { he:'🍺', hn:'武松', q:'武松在景阳冈共喝了多少碗酒才上山打虎？那家酒叫三碗不过冈。', opts:['三碗','九碗','十八碗','二十四碗'], ans:2, exp:'武松足足喝了【十八碗】！店家一再劝阻，他偏不听，独自上山，徒手打死大老虎！' },
+    { he:'🔥', hn:'林冲', q:'林冲被发配沧州看守草料场，是谁放火烧草料场企图害死林冲？', opts:['林冲不慎失火','陆谦等奸人放火','雷电引发','军士误操作'], ans:1, exp:'高俅派陆谦、富安放火，林冲幸运逃脱，雪夜手刃仇人，走上梁山之路！' },
+    { he:'🌲', hn:'鲁智深', q:'鲁智深暗中跟随被押送的林冲，在哪里出手相救打翻了两个差役？', opts:['沧州码头','野猪林','五台山下','大名府'], ans:1, exp:'鲁智深在【野猪林】打翻董超、薛霸，救下林冲，这段侠义情谊令人感动！' },
+    { he:'🍷', hn:'宋江', q:'宋江在浔阳楼题写反诗被判死刑，押赴刑场时发生了什么？', opts:['他被处决了','梁山好汉劫法场','他越狱逃跑','朝廷赦免了他'], ans:1, exp:'梁山好汉在刑场【劫法场】，救出宋江！此后宋江正式入伙，成为众望所归的头领！' },
+    { he:'⚡', hn:'鲁智深', q:'鲁智深在相国寺菜园子里，展示了哪个令众泼皮心服口服的壮举？', opts:['拳打山门石柱','脚踢护院家丁','倒拔垂杨柳','举起百斤石锁'], ans:2, exp:'鲁智深在相国寺【倒拔垂杨柳】，将大柳树连根拔起，从此众泼皮无不拜服！' }
+  ]},
+  { name: '第三关·人物关系', mult: 2, bonus: 70, qs: [
+    { he:'🔨', hn:'武松', q:'武松为兄报仇，手刃了哪两个人？哥哥武大郎被这两人合谋毒死。', opts:['高俅和蔡京','西门庆和潘金莲','陆谦和富安','郑屠和张青'], ans:1, exp:'武大郎被【潘金莲与西门庆】合谋毒死，武松为兄报仇手刃二人，义薄云天！' },
+    { he:'⚡', hn:'鲁智深', q:'鲁智深拳打镇关西，是为了帮助谁脱离苦海？', opts:['林冲的妻子','金翠莲父女','宋江的兄弟','李逵的母亲'], ans:1, exp:'鲁智深听到【金翠莲父女】哭诉被郑屠欺压，于是挺身相助，三拳打死郑屠！' },
+    { he:'🪓', hn:'李逵', q:'李逵绰号黑旋风，使双板斧，对梁山哪位大哥最忠心耿耿？', opts:['晁盖','宋江','吴用','卢俊义'], ans:1, exp:'李逵对【宋江】忠心耿耿，凡宋江有难，他第一个冲上去，力大无比，是梁山猛将！' },
+    { he:'🩹', hn:'花荣', q:'花荣绰号小李广，箭法百发百中。他原来担任哪里的官员？', opts:['青州知府','清风寨知寨','沧州兵马都监','东平府将官'], ans:1, exp:'花荣是【清风寨知寨】，因宋江被陷害，他毅然弃官与宋江一同奔赴梁山！' },
+    { he:'🌊', hn:'晁盖', q:'梁山最初的首领晁盖，在哪次战役中中毒箭身亡？', opts:['攻打大名府','攻打曾头市','征讨方腊','三打祝家庄'], ans:1, exp:'晁盖在【攻打曾头市】时被毒箭射中，不治身亡，此后宋江成为梁山新头领！' }
+  ]},
+  { name: '第四关·梁山秘闻', mult: 3, bonus: 80, qs: [
+    { he:'🏰', hn:'梁山', q:'水浒传中梁山泊共聚集了多少位好汉，史称一百单八将？', opts:['36位','72位','108位','120位'], ans:2, exp:'梁山共有【108位】好汉，36位天罡星和72位地煞星，共同在梁山替天行道！' },
+    { he:'🨀', hn:'吴用', q:'吴用等人智取生辰纲，他们用什么方法迷倒了杨志一行人？', opts:['在水里下毒','在白酒里下蒙汗药','假扮官兵突袭','半夜偷袭营地'], ans:1, exp:'吴用等人在白酒里下【蒙汗药】，趁杨志等人喝酒后昏倒，成功劫走生辰纲！' },
+    { he:'🏰', hn:'梁山', q:'梁山泊旗帜上写着哪四个大字，代表好汉们的行事宗旨？', opts:['替天行道','劫富济贫','杀贪官吏','忠义千秋'], ans:0, exp:'梁山旗帜上写着【替天行道】，意思是代替上天惩恶扬善，反对贪官污吏！' },
+    { he:'🚢', hn:'阮氏三兄弟', q:'阮小二、阮小五、阮小七是渔民出身，在梁山主要负责哪方面作战？', opts:['骑兵冲锋','水上作战','山地伏击','情报刺探'], ans:1, exp:'阮氏三兄弟水性极佳，是梁山【水军】核心，在水上战无不胜！' },
+    { he:'🏰', hn:'梁山', q:'梁山英雄排座次时，谁坐上了梁山第一把交椅成为大头领？', opts:['卢俊义','宋江','吴用','林冲'], ans:1, exp:'【宋江】排在梁山第一位，坐上头把交椅，卢俊义排第二，吴用排第三！' }
+  ]},
+  { name: '第五关·终极考验', mult: 4, bonus: 100, qs: [
+    { he:'📚', hn:'水浒传', q:'水浒传是我国四大名著之一，它的作者是谁？', opts:['罗贯中','施耐庵','吴承恩','曹雪芹'], ans:1, exp:'《水浒传》由元末明初的【施耐庵】所著，是中国古代最优秀的长篇小说之一！' },
+    { he:'🔨', hn:'林冲', q:'林冲被迫上梁山之前，在哪个地方亲手杀死了陆谦等仇人？', opts:['野猪林','沧州监狱','山神庙','草料场门口'], ans:2, exp:'林冲在大雪夜躲进【山神庙】避寒，听到陆谦等人密谋，忍无可忍手刃仇人！' },
+    { he:'🐯', hn:'武松', q:'武松醉打蒋门神，是帮谁夺回了快活林酒店？', opts:['宋江','施恩','柴进','燕青'], ans:1, exp:'武松醉打蒋门神是为了帮【施恩】夺回快活林，使出玉环步鸳鸯脚，三拳两脚打倒蒋门神！' },
+    { he:'⚡', hn:'鲁智深', q:'鲁智深最后的结局是什么？', opts:['战死沙场','在杭州六和寺坐化圆寂','回到五台山','被朝廷赦免回乡'], ans:1, exp:'鲁智深在【杭州六和寺坐化圆寂】，在一声潮水声中大彻大悟，得到完满的归宿！' },
+    { he:'📚', hn:'水浒传', q:'以下哪部作品与水浒传同属于中国四大名著？', opts:['儒林外史','聊斋志异','红楼梦','封神演义'], ans:2, exp:'四大名著是《水浒传》《三国演义》《西游记》【《红楼梦》】，都是中国古典文学的瑰宝！' }
+  ]}
+];
+
+var TITLES = [
+  {min:0,   label:'初入江湖',   icon:'🕐'},
+  {min:80,  label:'江湖好汉',   icon:'⚔️'},
+  {min:200, label:'梁山义士',   icon:'🏰'},
+  {min:350, label:'替天行道',   icon:'🚩'},
+  {min:500, label:'地煞星将',   icon:'⭐'},
+  {min:700, label:'天罡星将',   icon:'⭐⭐'},
+  {min:900, label:'梁山大头领', icon:'👑'}
+];
+
+var CHAPTER_REWARDS = [
+  {icon:'🎉', titleUnlock:'江湖好汉',   msg:'英雄绰号全通！你已认识梁山最出名的好汉，下一关分值翻倍！'},
+  {icon:'🔥', titleUnlock:'梁山义士',   msg:'经典情节全通！你对水浒情节掌握很好，继续加油！'},
+  {icon:'⚡',   titleUnlock:'替天行道',   msg:'人物关系全通！进入第四关，分值变为3倍，全力冲刺！'},
+  {icon:'⭐', titleUnlock:'地煞星将',   msg:'秘闻全通！最终关每题高达80分，冲刺最高头衔！'},
+  {icon:'👑', titleUnlock:'天罡星将',   msg:'恭喜通关所有五关！你是真正的水浒传达人！'}
+];
+
+var curChapter=0, curQ=0, score=0, combo=0, wrongs=[], done=false, earnedMedals=[], chapterScores=[0,0,0,0,0];
+
+function getTotalQ(){var t=0;CHAPTERS.forEach(function(c){t+=c.qs.length;});return t;}
+function getGlobalIdx(){var idx=0;for(var i=0;i<curChapter;i++)idx+=CHAPTERS[i].qs.length;return idx+curQ;}
+
+function show(id){
+  ['ss','qs','es'].forEach(function(i){document.getElementById(i).style.display='none';});
+  document.getElementById(id).style.display='block';
+}
+
+function startGame(){
+  curChapter=0;curQ=0;score=0;combo=0;wrongs=[];done=false;earnedMedals=[];chapterScores=[0,0,0,0,0];
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('title-badge').style.display='block';
+  updateHUD();show('qs');render();
+}
+
+function render(){
+  done=false;
+  var ch=CHAPTERS[curChapter], d=ch.qs[curQ];
+  document.getElementById('bg').textContent=ch.name+(ch.mult>1?' x'+ch.mult+'倍':'');
+  document.getElementById('he').innerHTML=d.he;
+  document.getElementById('hn').textContent=d.hn;
+  document.getElementById('qt').textContent=d.q;
+  var o=document.getElementById('opts');
+  o.innerHTML='';
+  for(var i=0;i<d.opts.length;i++){
+    var b=document.createElement('button');
+    b.className='ob';
+    b.textContent=d.opts[i];
+    (function(idx,btn){btn.onclick=function(){pick(idx);};})(i,b);
+    o.appendChild(b);
+  }
+  var f=document.getElementById('fb');
+  f.className='fb';f.textContent='';
+  document.getElementById('nb').style.display='none';
+  updateHUD();
+}
+
+function pick(idx){
+  if(done)return;
+  done=true;
+  var ch=CHAPTERS[curChapter], d=ch.qs[curQ];
+  var base=(curChapter===4?20:10)*ch.mult;
+  var btns=document.querySelectorAll('.ob');
+  btns.forEach(function(b){b.onclick=null;b.style.cursor='default';});
+  var f=document.getElementById('fb');
+  if(idx===d.ans){
+    btns[idx].classList.add('cor');
+    combo++;
+    var bonus=0;
+    if(combo>=5){bonus=base;showComboToast('🔥 五连击！额外+'+base+'分');}
+    else if(combo>=3){bonus=Math.floor(base/2);showComboToast('⚡ 三连击！额外+'+bonus+'分');}
+    var pts=base+bonus;
+    score+=pts;chapterScores[curChapter]+=pts;
+    f.className='fb ok show';
+    f.textContent='答对了！+'+pts+'分'+(bonus>0?' (含连击奖励)':'')+'  '+d.exp;
+  } else {
+    btns[idx].classList.add('wrg');btns[d.ans].classList.add('cor');
+    combo=0;
+    f.className='fb bad show';
+    f.textContent='答错了！  '+d.exp;
+    wrongs.push({q:d.q,a:d.opts[d.ans]});
+  }
+  document.getElementById('nb').style.display='block';
+  var isLast=(curQ===ch.qs.length-1);
+  var isFinal=(curChapter===CHAPTERS.length-1&&isLast);
+  document.getElementById('nb').textContent=isFinal?'查看最终结果 🏆':(isLast?'进入下一关 ⚔️':'下一题 →');
+  updateHUD();
+}
+
+function nextQ(){
+  var ch=CHAPTERS[curChapter];
+  if(curQ===ch.qs.length-1){showChapterClear();}
+  else{curQ++;render();}
+}
+
+function showChapterClear(){
+  var ch=CHAPTERS[curChapter],r=CHAPTER_REWARDS[curChapter];
+  var maxScore=ch.qs.length*(curChapter===4?20:10)*ch.mult;
+  var isPerfect=(chapterScores[curChapter]>=maxScore);
+  var bonusScore=isPerfect?ch.bonus:0;
+  if(bonusScore>0)score+=bonusScore;
+  document.getElementById('pop-icon').innerHTML=r.icon;
+  document.getElementById('pop-ch-title').textContent=ch.name+' 通关！';
+  document.getElementById('pop-reward').innerHTML='本关得分：<strong>'+chapterScores[curChapter]+'分</strong>'+(bonusScore>0?'<br>⭐ 全对奖励：+'+bonusScore+'分！':'')+'<br>累计总分：<strong>'+score+'分</strong>';
+  document.getElementById('pop-title-val').innerHTML=r.icon+' '+r.titleUnlock;
+  document.getElementById('pop-msg').textContent=r.msg;
+  earnedMedals.push(r.titleUnlock);
+  document.getElementById('overlay').classList.add('show');
+  updateHUD();
+}
+
+function closePopAndContinue(){
+  document.getElementById('overlay').classList.remove('show');
+  curChapter++;
+  if(curChapter>=CHAPTERS.length){showEnd();}
+  else{curQ=0;combo=0;render();}
+}
+
+function showComboToast(msg){
+  var t=document.getElementById('combo-toast');
+  t.innerHTML=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},1600);
+}
+
+function updateHUD(){
+  var total=getTotalQ(),gi=getGlobalIdx();
+  document.getElementById('hud-fill').style.width=(gi/total*100)+'%';
+  document.getElementById('hud-score').textContent='⭐ '+score+'分';
+  document.getElementById('hud-qc').textContent=(gi+1)+'/'+total;
+  document.getElementById('hud-combo').innerHTML=combo>=2?'🔥x'+combo:'';
+  var t=TITLES[0];
+  for(var i=TITLES.length-1;i>=0;i--){if(score>=TITLES[i].min){t=TITLES[i];break;}}
+  document.getElementById('title-badge').innerHTML=t.icon+' '+t.label;
+}
+
+function showEnd(){
+  document.getElementById('hud').style.display='none';
+  show('es');
+  document.getElementById('fs').textContent=score+'分';
+  var maxPossible=0;
+  CHAPTERS.forEach(function(c,ci){maxPossible+=c.qs.length*(ci===4?20:10)*c.mult+c.bonus;});
+  var pct=score/maxPossible;
+  var icon,title,rank,msg;
+  if(pct>=0.9){icon='👑';title='梁山封神！';rank='天罡星转世！';msg='太厉害了！你对水浒传的了解无人能及，堪称梁山大头领！';}
+  else if(pct>=0.75){icon='⭐';title='好汉威名！';rank='地煞星上榜！';msg='干得漂亮！你对水浒故事掌握深厚，再冲一把拿满分！';}
+  else if(pct>=0.55){icon='⚔️';title='初露锋芒！';rank='江湖好汉';msg='有实力！多读读原著，每个故事都精彩无比！';}
+  else{icon='📚';title='继续加油！';rank='初出茅庐';msg='别灰心！水浒传故事精彩纷呈，重读一遍再来挑战，你一定能进步！';}
+  document.getElementById('ei').innerHTML=icon;
+  document.getElementById('et').textContent=title;
+  document.getElementById('rn').textContent=rank;
+  document.getElementById('emsg').textContent=msg;
+  var md=document.getElementById('medals');md.innerHTML='';
+  earnedMedals.forEach(function(m){var s=document.createElement('span');s.className='medal';s.textContent='🎍 '+m;md.appendChild(s);});
+  var wr=document.getElementById('wr');wr.innerHTML='';
+  if(wrongs.length>0){
+    var h=document.createElement('p');h.style.cssText='color:#c0392b;font-weight:bold;margin-bottom:8px;font-size:.92rem;';h.textContent='错题回顾：';wr.appendChild(h);
+    wrongs.forEach(function(w){var d=document.createElement('div');d.className='wi';d.innerHTML='❓ '+w.q+'<br>✓ 正确答案：<strong>'+w.a+'</strong>';wr.appendChild(d);});
+  }
+}
+</script>
+</body>
+</html>
